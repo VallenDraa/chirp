@@ -13,6 +13,17 @@ dayjs.extend(relativeTime);
 
 const CreatePostWizard: React.FC = () => {
   const { user } = useUser();
+  const [input, setInput] = React.useState("");
+
+  const ctx = api.useContext();
+
+  const { mutate: createPost, isLoading: isPosting } =
+    api.posts.create.useMutation({
+      onSuccess: () => {
+        setInput("");
+        void ctx.posts.getAll.invalidate();
+      },
+    });
 
   if (!user) {
     return null;
@@ -30,9 +41,21 @@ const CreatePostWizard: React.FC = () => {
 
       <input
         type="text"
-        className="flex-grow bg-transparent px-4 py-2 text-slate-300 placeholder:text-slate-500 focus:outline-none"
+        className="flex-grow bg-transparent px-4 py-2 text-slate-300 transition-colors placeholder:text-slate-500 focus:outline-none disabled:text-slate-400"
         placeholder="Emojis please..."
+        value={input}
+        disabled={isPosting}
+        onChange={(e) => setInput(e.target.value)}
       />
+
+      <button
+        className="px-4 py-2 text-lg text-emerald-500 underline-offset-2 transition-colors hover:underline disabled:text-slate-400"
+        type="submit"
+        disabled={isPosting}
+        onClick={() => createPost({ content: input })}
+      >
+        Post
+      </button>
     </div>
   );
 };
