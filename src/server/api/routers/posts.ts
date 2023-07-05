@@ -15,12 +15,6 @@ const ratelimit = new Ratelimit({
   redis: Redis.fromEnv(),
   limiter: Ratelimit.slidingWindow(3, "1 m"),
   analytics: true,
-  /**
-   * Optional prefix for the keys used in redis. This is useful if you want to share a redis
-   * instance with other applications and want to avoid key collisions. The default prefix is
-   * "@upstash/ratelimit"
-   */
-  prefix: "@upstash/ratelimit",
 });
 
 const filterUserForClient = (user: User) => {
@@ -69,7 +63,12 @@ export const postsRouter = createTRPCRouter({
   create: privateProcedure
     .input(
       z.object({
-        content: z.string().emoji().min(1).max(255),
+        content: z
+          .string()
+          .regex(/^[^\d]*$/, "No numbers, only emoji !")
+          .emoji("Please only input emoji !")
+          .min(1)
+          .max(255),
       })
     )
     .mutation(async ({ ctx, input }) => {
