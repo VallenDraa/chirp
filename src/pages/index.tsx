@@ -6,6 +6,8 @@ import React from "react";
 import Image from "next/image";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { LoadingSpinner } from "~/components/loading-spinner";
+import Link from "next/link";
 
 dayjs.extend(relativeTime);
 
@@ -49,9 +51,12 @@ const PostView = (props: PostWithUser) => {
         width={48}
       />
       <div>
-        <div className="flex items-center gap-1 text-slate-400">
-          <span>{`@${author.username}`}</span>
-          <span className="text-sm">{`• ${dayjs(
+        <div className="flex items-center gap-1">
+          <Link
+            href="/"
+            className="text-emerald-500 underline-offset-2 hover:underline"
+          >{`@${author.username}`}</Link>
+          <span className="text-sm text-slate-400">{`• ${dayjs(
             post.createdAt
           ).fromNow()}`}</span>
         </div>
@@ -62,17 +67,40 @@ const PostView = (props: PostWithUser) => {
   );
 };
 
-const Home: NextPage = () => {
-  const user = useUser();
+const Feed = () => {
+  const { data: posts, isLoading: postsLoading } = api.posts.getAll.useQuery();
 
-  const { data: posts, isLoading } = api.posts.getAll.useQuery();
-
-  if (isLoading) {
-    return <div className="animate-pulse">Loading Posts</div>;
+  if (postsLoading) {
+    return (
+      <div className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+        <LoadingSpinner />;
+      </div>
+    );
   }
 
   if (!posts) {
-    return <div>No Posts Available</div>;
+    return <span>Something went wrong</span>;
+  }
+
+  return (
+    <ul className="m-4 space-y-4">
+      {posts.map(({ post, author }) => {
+        return <PostView author={author} post={post} key={post.id} />;
+      })}
+    </ul>
+  );
+};
+
+const Home: NextPage = () => {
+  const { isSignedIn, isLoaded: userLoaded } = useUser();
+
+  // so that the data is downloaded early
+  // and cached
+  api.posts.getAll.useQuery();
+
+  // return empty div if user isn't loaded
+  if (!userLoaded) {
+    return <div />;
   }
 
   return (
@@ -85,19 +113,16 @@ const Home: NextPage = () => {
       <main className="flex h-screen justify-center">
         <div className="h-full w-full max-w-screen-md bg-slate-900">
           <div className="flex w-full bg-slate-800 p-4 shadow shadow-slate-800">
-            {!user.isSignedIn && (
+            {!isSignedIn && (
               <div className="flex justify-center">
                 <SignInButton />
               </div>
             )}
 
-            {user.isSignedIn && <CreatePostWizard />}
+            {isSignedIn && <CreatePostWizard />}
           </div>
-          <ul className="m-4 space-y-4">
-            {posts.map(({ post, author }) => {
-              return <PostView author={author} post={post} key={post.id} />;
-            })}
-          </ul>
+
+          <Feed />
         </div>
       </main>
     </>
