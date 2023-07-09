@@ -3,7 +3,7 @@ import Link from "next/link";
 import React from "react";
 
 export type ProfilePictureProps = {
-  profileUrl: string;
+  profileUrl?: string;
   src: string;
   alt: string;
   width: number;
@@ -13,9 +13,11 @@ export type ProfilePictureProps = {
 export const ProfilePicture: React.FC<ProfilePictureProps> = (props) => {
   const { profileUrl, alt, ...others } = props;
 
-  return (
+  return profileUrl ? (
     <Link href={profileUrl}>
       <Image className="rounded-full" alt={alt} {...others} />
     </Link>
+  ) : (
+    <Image className="rounded-full" alt={alt} {...others} />
   );
 };

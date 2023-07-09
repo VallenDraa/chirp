@@ -1,15 +1,11 @@
 import { type NextPage } from "next";
 import { SignInButton, useUser } from "@clerk/nextjs";
-import { type RouterOutputs, api } from "~/utils/api";
+import { api } from "~/utils/api";
 import React from "react";
-import dayjs from "dayjs";
-import relativeTime from "dayjs/plugin/relativeTime";
 import { LoadingSpinner } from "~/components/loading-spinner";
-import Link from "next/link";
 import toast from "react-hot-toast";
 import { ProfilePicture } from "~/components/profile-picture";
-
-dayjs.extend(relativeTime);
+import { PostView } from "~/components/post-view";
 
 const CreatePostWizard: React.FC = () => {
   const { user } = useUser();
@@ -79,43 +75,6 @@ const CreatePostWizard: React.FC = () => {
   );
 };
 
-type PostWithUser = RouterOutputs["posts"]["getAll"][number];
-const PostView = (props: PostWithUser) => {
-  const { post, author } = props;
-
-  return (
-    <li className="flex items-center gap-4 rounded-lg bg-slate-800 p-4 shadow-slate-800">
-      <div className="min-w-[48px]">
-        <ProfilePicture
-          profileUrl={`/@${author.username}`}
-          src={author.profileImageUrl}
-          alt={author.username ?? "User image"}
-          height={48}
-          width={48}
-        />
-      </div>
-      <div>
-        <div className="flex items-center gap-1">
-          <Link
-            href={`/@${author.username}`}
-            className="text-emerald-500 underline-offset-2 hover:underline"
-          >{`@${author.username}`}</Link>
-
-          <span className="text-slate-500">•</span>
-
-          <Link href={`/post/${post.id}`}>
-            <span className="text-sm text-slate-400 underline-offset-2 hover:underline">{`${dayjs(
-              post.createdAt
-            ).fromNow()}`}</span>
-          </Link>
-        </div>
-
-        <p className="text-2xl">{post.content}</p>
-      </div>
-    </li>
-  );
-};
-
 const Feed = () => {
   const { data: posts, isLoading: postsLoading } = api.posts.getAll.useQuery();
 
@@ -154,21 +113,17 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <main className="flex min-h-screen justify-center">
-        <div className="h-full w-full max-w-screen-md bg-slate-900">
-          <div className="sticky top-0 flex w-full bg-slate-800 p-4 shadow shadow-slate-900">
-            {!isSignedIn && (
-              <div className="flex justify-center">
-                <SignInButton />
-              </div>
-            )}
-
-            {isSignedIn && <CreatePostWizard />}
+      <div className="sticky top-0 flex w-full bg-slate-800 p-4 shadow shadow-slate-900">
+        {!isSignedIn && (
+          <div className="flex justify-center">
+            <SignInButton />
           </div>
+        )}
 
-          <Feed />
-        </div>
-      </main>
+        {isSignedIn && <CreatePostWizard />}
+      </div>
+
+      <Feed />
     </>
   );
 };
